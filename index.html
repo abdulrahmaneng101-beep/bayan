@@ -2,7 +2,6 @@
 <html lang="ar" dir="rtl">
 
 <head>
-    <meta name="google-site-verification" content="Jzj5XCqkAOLznELwUv9bL3frTzFBAq7ns-Uw6rZ17Tk" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>متجر بيعان | Bay'an Store</title>
@@ -251,13 +250,12 @@
 
     </main>
 
-    <!-- Image Modal Viewer -->
+    <!-- Image / Video Modal Viewer -->
     <div id="img-modal"
         class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4 cursor-pointer"
         onclick="closeImgModal()">
         <div class="relative max-w-2xl w-full max-h-[90vh]">
-            <img id="img-modal-src" src="" class="w-full h-full object-contain rounded-2xl shadow-2xl">
-            <p class="text-center text-white text-xs mt-3 opacity-80">اضغط في أي مكان للإغلاق</p>
+            <!-- Dynamic Media JS Injection -->
         </div>
     </div>
 
@@ -567,6 +565,24 @@
                     "lap (3).png",
                     "lap (4).png",
                 ]
+            },
+            {
+                id: 8,
+                category: "electronics",
+                name: "جرس باب ذكي لاسلكي بكاميرا HD ورؤية ليلية، مراقبة منزلية مع تنبيه فوري وعمر بطارية طويل",
+                price: 1380,
+                oldPrice: 1550,
+                badge: "حاجه متينه من الاخر",
+                badgeBg: "bg-purple-100 text-purple-800 border-purple-200",
+                desc: "سعر لفتره محدوده",
+                sizes: ["ابيض"],
+                images: [
+                    "video-1.mp4",
+                    "i (1).png",
+                    "i (2).png",
+                    "i (3).png",
+                    "i (4).png",
+                ]
             }
         ];
 
@@ -580,6 +596,16 @@
             selectedSizes[p.id] = p.sizes[0];
             currentSlideIndexes[p.id] = 0;
         });
+
+        // Helper function to render image or video element
+        function renderMediaElement(src, productId) {
+            const isVideo = src.endsWith('.mp4') || src.endsWith('.webm') || src.endsWith('.mov');
+            if (isVideo) {
+                return `<video id="product-img-${productId}" src="${src}" autoplay loop muted playsinline class="w-full h-full object-cover group-hover/img:scale-105 transition-all duration-300 fade-img"></video>`;
+            } else {
+                return `<img id="product-img-${productId}" src="${src}" alt="" class="w-full h-full object-cover group-hover/img:scale-105 transition-all duration-300 fade-img">`;
+            }
+        }
 
         // Filter Category Function
         function filterCategory(category) {
@@ -628,9 +654,11 @@
                 return `
                 <div class="bg-white rounded-3xl border border-slate-200/90 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col justify-between group">
                     <div>
-                        <!-- Main Image Display Carousel -->
+                        <!-- Main Image/Video Display Carousel -->
                         <div class="relative overflow-hidden aspect-square bg-slate-100 cursor-pointer group/img" onclick="openImgModal(products.find(item => item.id === ${p.id}).images[currentSlideIndexes[${p.id}] || 0])">
-                            <img id="product-img-${p.id}" src="${activeImg}" alt="${p.name}" class="w-full h-full object-cover group-hover/img:scale-105 transition-all duration-300 fade-img">
+                            <div id="media-wrapper-${p.id}" class="w-full h-full">
+                                ${renderMediaElement(activeImg, p.id)}
+                            </div>
                             
                             <span class="absolute top-3 right-3 text-xs font-black px-3 py-1 rounded-full border shadow-sm ${p.badgeBg} z-10">
                                 ${p.badge}
@@ -698,13 +726,13 @@
             if (!product || product.images.length <= 1) return;
 
             currentSlideIndexes[productId] = nextIndex;
-            const imgEl = document.getElementById(`product-img-${productId}`);
+            const mediaWrapper = document.getElementById(`media-wrapper-${productId}`);
 
-            if (imgEl) {
-                imgEl.classList.add('opacity-0');
+            if (mediaWrapper) {
+                mediaWrapper.classList.add('opacity-0');
                 setTimeout(() => {
-                    imgEl.src = product.images[nextIndex];
-                    imgEl.classList.remove('opacity-0');
+                    mediaWrapper.innerHTML = renderMediaElement(product.images[nextIndex], productId);
+                    mediaWrapper.classList.remove('opacity-0');
                 }, 150);
             }
 
@@ -739,7 +767,7 @@
             updateProductSlide(productId, index);
         }
 
-        // Auto Slideshow Interval without Full-Page Re-rendering
+        // Auto Slideshow Interval
         setInterval(() => {
             products.forEach(p => {
                 if (p.images.length > 1) {
@@ -750,7 +778,21 @@
         }, 3500);
 
         function openImgModal(src) {
-            document.getElementById('img-modal-src').src = src;
+            const modalContainer = document.querySelector('#img-modal .relative');
+            const isVideo = src.endsWith('.mp4') || src.endsWith('.webm') || src.endsWith('.mov');
+
+            if (isVideo) {
+                modalContainer.innerHTML = `
+                    <video src="${src}" autoplay loop muted playsinline class="w-full h-full object-contain rounded-2xl shadow-2xl"></video>
+                    <p class="text-center text-white text-xs mt-3 opacity-80">اضغط في أي مكان للإغلاق</p>
+                `;
+            } else {
+                modalContainer.innerHTML = `
+                    <img src="${src}" class="w-full h-full object-contain rounded-2xl shadow-2xl">
+                    <p class="text-center text-white text-xs mt-3 opacity-80">اضغط في أي مكان للإغلاق</p>
+                `;
+            }
+
             document.getElementById('img-modal').classList.remove('hidden');
         }
 
@@ -801,6 +843,15 @@
             }, 3000);
         }
 
+        function renderCartThumb(images) {
+            const media = images.find(img => !img.endsWith('.mp4') && !img.endsWith('.webm') && !img.endsWith('.mov')) || images[0];
+            const isVideo = media.endsWith('.mp4') || media.endsWith('.webm') || media.endsWith('.mov');
+            if (isVideo) {
+                return `<video src="${media}" autoplay loop muted playsinline class="w-12 h-12 rounded-xl object-cover border"></video>`;
+            }
+            return `<img src="${media}" class="w-12 h-12 rounded-xl object-cover border">`;
+        }
+
         function updateCart() {
             const cartItems = document.getElementById('cart-items');
             const cartCount = document.getElementById('cart-count');
@@ -827,7 +878,7 @@
             cartItems.innerHTML = cart.map(item => `
                 <div class="flex items-center justify-between bg-slate-50 p-3 rounded-2xl border border-slate-100">
                     <div class="flex items-center gap-3">
-                        <img src="${item.images[0]}" class="w-12 h-12 rounded-xl object-cover border">
+                        ${renderCartThumb(item.images)}
                         <div>
                             <h5 class="font-extrabold text-xs text-slate-900">${item.name}</h5>
                             <p class="text-[11px] text-slate-500">الخيار/المقاس: <span class="font-bold text-amber-600">${item.selectedSize}</span></p>
